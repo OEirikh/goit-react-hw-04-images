@@ -3,8 +3,8 @@ import { Component } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-// import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
-// import { MutatingDots } from "react-loader-spinner";
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css";
+import { MutatingDots } from "react-loader-spinner";
 
 import Searchbar from "./components/Searchbar";
 import ImageGallery from "./components/ImageGallery";
@@ -98,8 +98,7 @@ class App extends Component {
         {images.length >= 1 && (
           <ImageGallery handleTogleModal={handleTogleModal} images={images} />
         )}
-        {/* < MutatingDots ariaLabel="loading"/> */}
-        {isPending && "Loading..."}
+        {isPending && <MutatingDots ariaLabel="loading" />}
         {images.length >= 12 && <Button handleLoadMore={handleLoadMore} />}
         {isModalOpen && (
           <Modal
