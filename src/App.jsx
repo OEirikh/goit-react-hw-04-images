@@ -19,6 +19,7 @@ function App() {
     isModalOpen: false,
     modalImg: "",
     modalAlt: "",
+    total: 0,
   };
 
   const reducer = (
@@ -33,6 +34,7 @@ function App() {
         isModalOpen,
         modalImg,
         modalAlt,
+        total,
       },
     }
   ) => {
@@ -58,6 +60,8 @@ function App() {
           images: images,
           isPending: isPending,
         };
+      case "total":
+        return { ...state, total: total };
 
       default:
         throw new Error(`Unsuported this type action ${type}`);
@@ -65,8 +69,17 @@ function App() {
   };
 
   const [state, dispatch] = useReducer(reducer, initialState);
-  const { query, images, isPending, page, isModalOpen, modalImg, modalAlt } =
-    state;
+
+  const {
+    query,
+    images,
+    isPending,
+    page,
+    isModalOpen,
+    modalImg,
+    modalAlt,
+    total,
+  } = state;
 
   const handleSetQuery = ({ target: { value } }) => {
     dispatch({ type: "handleSetQuery", payload: { query: value } });
@@ -107,8 +120,9 @@ function App() {
   useEffect(() => {
     if (isPending) {
       fetchImages(query, page)
-        .then((img) => {
-          if (img.length === 0) {
+        .then((data) => {
+          dispatch({ type: "total", payload: { total: data.total } });
+          if (data.hits.length === 0) {
             return (
               dispatch({ type: "isPending", payload: { isPending: false } }),
               toast(
@@ -124,11 +138,14 @@ function App() {
             page > 1
               ? {
                   type: "fetchImages",
-                  payload: { images: [...images, ...img], isPending: false },
+                  payload: {
+                    images: [...images, ...data.hits],
+                    isPending: false,
+                  },
                 }
               : {
                   type: "fetchImages",
-                  payload: { images: [...img], isPending: false },
+                  payload: { images: [...data.hits], isPending: false },
                 }
           );
         })
@@ -136,7 +153,7 @@ function App() {
           console.log(error.massage);
         });
     }
-  }, [isPending, page, query, images]);
+  }, [images, isPending, page, query]);
 
   return (
     <div className={s.App}>
@@ -149,7 +166,9 @@ function App() {
         <ImageGallery handleTogleModal={handleTogleModal} images={images} />
       )}
       {isPending && <MutatingDots ariaLabel="loading" />}
-      {images.length >= 12 && <Button handleLoadMore={handleLoadMore} />}
+      {images.length >= 12 && images.length !== total && (
+        <Button handleLoadMore={handleLoadMore} />
+      )}
       {isModalOpen && (
         <Modal
           modalImg={modalImg}
@@ -161,106 +180,5 @@ function App() {
     </div>
   );
 }
-
-// class App extends Component {
-//   state = {
-//     query: "",
-//     page: 1,
-//     images: [],
-//     isPending: false,
-//     isModalOpen: false,
-//     modalImg: "",
-//     modalAlt: "",
-//   };
-
-//   handleSetQuery = ({ target: { name, value } }) => {
-//     this.setState({ [name]: value.toLowerCase() });
-//   };
-
-//   handleSubmitForm = (e) => {
-//     e.preventDefault();
-//     if (this.state.query.trim() === "") {
-//       return toast("enter your request please!", {
-//         position: "top-center",
-//         hideProgressBar: true,
-//       });
-//     }
-//     this.setState({ page: 1, isPending: true });
-//   };
-
-//   handleTogleModal = (image, alt) => {
-//     this.setState((prev) => ({
-//       isModalOpen: !prev.isModalOpen,
-//       modalImg: image,
-//       modalAlt: alt,
-//     }));
-//   };
-
-//   handleLoadMore = () => {
-//     this.setState((prev) => ({ page: prev.page + 1, isPending: true }));
-//   };
-
-//   componentDidUpdate() {
-//     const { query, page, isPending } = this.state;
-//     if (isPending) {
-//       fetchImages(query, page)
-//         .then((img) => {
-//           if (img.length === 0) {
-//             return (
-//               this.setState({ isPending: false }),
-//               toast(
-//                 `Ypss!!! No results were found for "${query}", please edit your query.`,
-//                 {
-//                   position: "top-center",
-//                   hideProgressBar: true,
-//                 }
-//               )
-//             );
-//           }
-//           this.setState((prev) => ({
-//             images: page > 1 ? [...prev.images, ...img] : img,
-//             isPending: false,
-//           }));
-//         })
-//         .catch((error) => {
-//           console.log(error.massage);
-//         });
-//     }
-//   }
-
-//   render() {
-//     const { query, images, isPending, isModalOpen, modalImg, modalAlt } =
-//       this.state;
-//     const {
-//       handleSetQuery,
-//       handleSubmitForm,
-//       handleTogleModal,
-//       handleLoadMore,
-//     } = this;
-
-//     return (
-//       <div className={s.App}>
-//         <Searchbar
-//           query={query}
-//           handleSetQuery={handleSetQuery}
-//           handleSubmitForm={handleSubmitForm}
-//         />
-//         {images.length >= 1 && (
-//           <ImageGallery handleTogleModal={handleTogleModal} images={images} />
-//         )}
-//         {isPending && <MutatingDots ariaLabel="loading" />}
-//         {images.length >= 12 && <Button handleLoadMore={handleLoadMore} />}
-//         {isModalOpen && (
-//           <Modal
-//             modalImg={modalImg}
-//             handleTogleModal={handleTogleModal}
-//             tag={modalAlt}
-//           />
-//         )}
-//         <ToastContainer autoClose={2500} />
-//       </div>
-//     );
-//   }
-// }
 
 export default App;
